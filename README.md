@@ -1,11 +1,17 @@
-# CloudStorageMaven
-[![GitHub version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=gh&type=6&v=2.3&x2=0)](http://badge.fury.io/gh/boennemann%2Fbadges)
+# AzureStorageWagon
 
+The AzureStorageWagon project enables you to upload your artifacts to an Azure Blob storage account. 
 
-The CloudStorageMaven projects aims to provide an easy way to host your java artifacts on the cloud without having to set up a maven repository.
+```
+<build>
+    <extensions>
+        <extension>
+            <groupId>com.gkatzioura.maven.cloud</groupId>
+            <artifactId>azure-storage-wagon</artifactId>
+            <version>1.8</version>
+        </extension>
+    </extensions>
+</build>
+```
 
-Cloud storage options supported:
-
-* [AWS S3](https://github.com/gkatzioura/CloudStorageMaven/tree/master/S3StorageWagon)
-* [Google Cloud Storage](https://github.com/gkatzioura/CloudStorageMaven/tree/master/GoogleStorageWagon)
-* [Azure Blob storage](https://github.com/gkatzioura/CloudStorageMaven/tree/master/AzureStorageWagon)
+Full guide on https://egkatzioura.com/2018/04/09/host-your-maven-artifacts-using-azure-blob-storage/
