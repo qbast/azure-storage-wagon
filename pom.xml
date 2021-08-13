@@ -31,7 +31,7 @@
         <junit.version>4.12</junit.version>
         <maven.plugin.api.version>3.0</maven.plugin.api.version>
         <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
-        <azure-storage.version>7.0.0</azure-storage.version>
+        <azure-storage.version>12.13.0</azure-storage.version>
     </properties>
 
     <licenses>
@@ -63,8 +63,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-storage</artifactId>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
             <version>${azure-storage.version}</version>
         </dependency>
         <dependency>

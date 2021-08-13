@@ -16,33 +16,33 @@
 
 package com.gkatzioura.maven.cloud.abs;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.core.util.Context;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobHttpHeaders;
+import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.gkatzioura.maven.cloud.transfer.TransferProgress;
+import com.gkatzioura.maven.cloud.transfer.TransferProgressFileInputStream;
+import com.gkatzioura.maven.cloud.transfer.TransferProgressFileOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 
-import com.gkatzioura.maven.cloud.transfer.TransferProgress;
-import com.gkatzioura.maven.cloud.transfer.TransferProgressFileInputStream;
-import com.gkatzioura.maven.cloud.transfer.TransferProgressFileOutputStream;
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
-import com.microsoft.azure.storage.blob.ListBlobItem;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.gkatzioura.maven.cloud.abs.ContentTypeResolver.getContentType;
 
@@ -50,7 +50,7 @@ public class AzureStorageRepository {
 
     private final String container;
     private final ConnectionStringFactory connectionStringFactory;
-    private CloudBlobContainer blobContainer;
+    private BlobContainerClient blobContainer;
 
     private static final Logger LOGGER = Logger.getLogger(AzureStorageRepository.class.getName());
 
@@ -63,10 +63,10 @@ public class AzureStorageRepository {
 
         String connectionString = connectionStringFactory.create(authenticationInfo);
         try {
-            CloudStorageAccount cloudStorageAccount = CloudStorageAccount.parse(connectionString);
-            blobContainer = cloudStorageAccount.createCloudBlobClient().getContainerReference(container);
-            blobContainer.getMetadata();
-        } catch (URISyntaxException |InvalidKeyException |StorageException e) {
+            BlobServiceClient cloudStorageAccount = new BlobServiceClientBuilder().connectionString(connectionString).buildClient();
+            blobContainer = cloudStorageAccount.getBlobContainerClient(container);
+            blobContainer.exists();
+        } catch (BlobStorageException e) {
             throw new AuthenticationException("Provide valid credentials");
         }
     }
@@ -76,8 +76,7 @@ public class AzureStorageRepository {
         LOGGER.log(Level.FINER,String.format("Downloading key %s from container %s into %s", resourceName, container, destination.getAbsolutePath()));
 
         try {
-
-            CloudBlob cloudBlob = blobContainer.getBlobReferenceFromServer(resourceName);
+            BlobClient cloudBlob= blobContainer.getBlobClient(resourceName);
 
             if(!cloudBlob.exists()) {
                 LOGGER.log(Level.FINER,"Blob {} does not exist",resourceName);
@@ -88,7 +87,7 @@ public class AzureStorageRepository {
                 InputStream inputStream = cloudBlob.openInputStream()) {
                 IOUtils.copy(inputStream,outputStream);
             }
-        } catch (URISyntaxException |StorageException |IOException e) {
+        } catch (IOException | BlobStorageException e) {
             throw new ResourceDoesNotExistException("Could not download file from repo",e);
         }
     }
@@ -98,14 +97,15 @@ public class AzureStorageRepository {
         LOGGER.log(Level.FINER,String.format("Checking if new key %s exists",resourceName));
 
         try {
-            CloudBlob cloudBlob = blobContainer.getBlobReferenceFromServer(resourceName);
+            BlobClient cloudBlob= blobContainer.getBlobClient(resourceName);
+
             if(!cloudBlob.exists()) {
                 return false;
             }
 
-            long updated = cloudBlob.getProperties().getLastModified().getTime();
+            long updated = cloudBlob.getProperties().getLastModified().toEpochSecond();
             return updated>timeStamp;
-        } catch (URISyntaxException |StorageException e) {
+        } catch (BlobStorageException  e) {
             LOGGER.log(Level.SEVERE,"Could not fetch cloud blob",e);
             throw new ResourceDoesNotExistException(resourceName);
         }
@@ -116,13 +116,14 @@ public class AzureStorageRepository {
         LOGGER.log(Level.FINER,String.format("Uploading key %s ",destination));
         try {
 
-            CloudBlockBlob blob = blobContainer.getBlockBlobReference(destination);
-            blob.getProperties().setContentType(getContentType(file));
+            BlobClient blob = blobContainer.getBlobClient(destination);
+            BlobHttpHeaders headers = new BlobHttpHeaders();
+            headers.setContentType(getContentType(file));
 
             try(InputStream inputStream = new TransferProgressFileInputStream(file,transferProgress)) {
-                blob.upload(inputStream,-1);
+                blob.uploadWithResponse(inputStream, file.length(),null, headers,null, null,null,null, Context.NONE);
             }
-        } catch (URISyntaxException |StorageException | IOException e) {
+        } catch (BlobStorageException | IOException e) {
             LOGGER.log(Level.SEVERE,"Could not fetch cloud blob",e);
             throw new TransferFailedException(destination);
         }
@@ -132,9 +133,9 @@ public class AzureStorageRepository {
     public boolean exists(String resourceName) throws TransferFailedException {
 
         try {
-            CloudBlockBlob blob = blobContainer.getBlockBlobReference(resourceName);
+            BlobClient blob= blobContainer.getBlobClient(resourceName);
             return blob.exists();
-        } catch (URISyntaxException |StorageException e) {
+        } catch (BlobStorageException e) {
             LOGGER.log(Level.SEVERE,"Could not fetch cloud blob",e);
             throw new TransferFailedException(resourceName);
         }
@@ -146,18 +147,13 @@ public class AzureStorageRepository {
 
         List<String> blobs = new ArrayList<>();
 
-        Iterable<ListBlobItem> blobItems = blobContainer.listBlobs();
-        Iterator<ListBlobItem> iterator = blobItems.iterator();
+        PagedIterable<BlobItem> blobItems = blobContainer.listBlobs();
+        Iterator<BlobItem> iterator = blobItems.iterator();
 
         while (iterator.hasNext()) {
 
-            ListBlobItem blobItem = iterator.next();
-
-            if(blobItem instanceof CloudBlob) {
-
-                CloudBlob cloudBlob = (CloudBlob) blobItem;
-                blobs.add(cloudBlob.getName());
-            }
+            BlobItem blobItem = iterator.next();
+            blobs.add(blobItem.getName());
         }
 
         return blobs;
