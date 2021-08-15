@@ -16,10 +16,16 @@
 
 package io.github.qbast.azurewagon.abs;
 
-import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.core.credential.TokenCredential;
+import com.azure.identity.AzureCliCredentialBuilder;
+import com.azure.identity.ChainedTokenCredentialBuilder;
+import com.azure.identity.EnvironmentCredentialBuilder;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.common.StorageSharedKeyCredential;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
+
+import java.util.Arrays;
 
 public class AuthenticationHandler {
 
@@ -32,9 +38,21 @@ public class AuthenticationHandler {
         if (authentication!=null) {
             builder.credential(new StorageSharedKeyCredential(authentication.getUserName(), authentication.getPassword()));
         } else {
-            builder.credential(new DefaultAzureCredentialBuilder().build());
+            builder.credential(createAzureAdCredential());
         }
 
         return builder;
     }
+
+    private TokenCredential createAzureAdCredential() {
+        return new ChainedTokenCredentialBuilder().
+                addAll(Arrays.asList(
+                        new EnvironmentCredentialBuilder().build(),
+                        new ManagedIdentityCredentialBuilder().build(),
+                        new AzureCliCredentialBuilder().build()
+                )).
+                build();
+    }
+
+
 }
