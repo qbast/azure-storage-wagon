@@ -21,7 +21,6 @@ import com.azure.core.util.Context;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobStorageException;
@@ -47,25 +46,26 @@ import java.util.logging.Logger;
 public class AzureStorageRepository {
 
     private final String container;
-    private final ConnectionStringFactory connectionStringFactory;
+    private final String accountName;
+    private final AuthenticationHandler authenticationHandler;
     private BlobContainerClient blobContainer;
 
     private static final Logger LOGGER = Logger.getLogger(AzureStorageRepository.class.getName());
 
-    public AzureStorageRepository(String directory) {
-        this.connectionStringFactory = new ConnectionStringFactory();
+    public AzureStorageRepository(String account, String directory) {
+        this.authenticationHandler = new AuthenticationHandler();
         this.container = directory;
+        this.accountName = account;
     }
 
     public void connect(AuthenticationInfo authenticationInfo) throws AuthenticationException {
 
-        String connectionString = connectionStringFactory.create(authenticationInfo);
         try {
-            BlobServiceClient cloudStorageAccount = new BlobServiceClientBuilder().connectionString(connectionString).buildClient();
+            BlobServiceClient cloudStorageAccount = authenticationHandler.create(accountName, authenticationInfo).buildClient();
             blobContainer = cloudStorageAccount.getBlobContainerClient(container);
             blobContainer.exists();
         } catch (BlobStorageException e) {
-            throw new AuthenticationException("Provide valid credentials");
+            throw new AuthenticationException("Provide valid credentials",e);
         }
     }
 

@@ -79,7 +79,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public void put(File file, String resourceName) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    public void put(File file, String resourceName) throws TransferFailedException {
         resourceName = Paths.get(resourceName).normalize().toString();
         Resource resource = new Resource(resourceName);
 
@@ -99,7 +99,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public void putDirectory(File source, String destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    public void putDirectory(File source, String destination) throws TransferFailedException {
         File[] files = source.listFiles();
         if (files != null) {
             for (File f : files) {
@@ -113,7 +113,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public boolean resourceExists(String resourceName) throws TransferFailedException, AuthorizationException {
+    public boolean resourceExists(String resourceName) throws TransferFailedException {
         try {
             return azureStorageRepository.exists(resourceName);
         } catch (TransferFailedException e) {
@@ -123,7 +123,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public List<String> getFileList(String resourceName) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    public List<String> getFileList(String resourceName) throws TransferFailedException {
 
         try {
             return azureStorageRepository.list(resourceName);
@@ -134,7 +134,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public void connect(Repository repository, AuthenticationInfo authenticationInfo, ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+    public void connect(Repository repository, AuthenticationInfo authenticationInfo, ProxyInfoProvider proxyInfoProvider) throws AuthenticationException {
 
         this.repository = repository;
         this.sessionListenerContainer.fireSessionOpening();
@@ -146,7 +146,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
 
             LOGGER.log(Level.FINER,String.format("Opening connection for account %s and container %s",account,container));
 
-            azureStorageRepository = new AzureStorageRepository(container);
+            azureStorageRepository = new AzureStorageRepository(account, container);
             azureStorageRepository.connect(authenticationInfo);
             sessionListenerContainer.fireSessionLoggedIn();
             sessionListenerContainer.fireSessionOpened();
@@ -157,7 +157,7 @@ public class AzureStorageWagon extends AbstractStorageWagon {
     }
 
     @Override
-    public void disconnect() throws ConnectionException {
+    public void disconnect() {
         sessionListenerContainer.fireSessionDisconnecting();
         azureStorageRepository.disconnect();
         sessionListenerContainer.fireSessionLoggedOff();
