@@ -47,7 +47,7 @@ public class BaseDirectoryResolverTest {
         BaseDirectoryResolver directoryResolver = new BaseDirectoryResolver();
         Repository repository = new Repository("test-repo","gs://test-repo/release");
         String baseDirectory = directoryResolver.resolve(repository);
-        Assert.assertEquals("release/",baseDirectory);
+        Assert.assertEquals("release",baseDirectory);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class BaseDirectoryResolverTest {
         BaseDirectoryResolver directoryResolver = new BaseDirectoryResolver();
         Repository repository = new Repository("test-repo","gs://test-repo/release/production");
         String baseDirectory = directoryResolver.resolve(repository);
-        Assert.assertEquals("release/production/",baseDirectory);
+        Assert.assertEquals("release/production",baseDirectory);
     }
 
 }
