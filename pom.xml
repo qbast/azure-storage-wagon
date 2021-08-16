@@ -3,8 +3,8 @@
      <modelVersion>4.0.0</modelVersion>
 
     <artifactId>azure-storage-wagon</artifactId>
-    <groupId>com.gkatzioura.maven.cloud</groupId>
-    <version>3.0</version>
+    <groupId>io.github.qbast</groupId>
+    <version>1.0</version>
 
     <description>Azure blob storage wagon</description>
 
@@ -15,12 +15,16 @@
             <organization>egkatzioura</organization>
             <organizationUrl>https://egkatzioura.com/</organizationUrl>
         </developer>
+        <developer>
+            <name>Jakub Stachowski</name>
+            <email>qbast@go2.pl</email>
+        </developer>
     </developers>
 
     <scm>
-        <url>https://github.com/gkatzioura/CloudStorage</url>
-        <connection>scm:git:https://github.com/gkatzioura/CloudStorage.git</connection>
-        <developerConnection>scm:git:https://github.com/gkatzioura/CloudStorage.git</developerConnection>
+        <url>https://github.com/qbast/azure-storage-wagon</url>
+        <connection>scm:git:https://github.com/qbast/azure-storage-wagon.git</connection>
+        <developerConnection>scm:git:https://github.com/qbast/azure-storage-wagon.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
