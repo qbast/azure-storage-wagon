@@ -4,7 +4,7 @@
 
     <artifactId>azure-storage-wagon</artifactId>
     <groupId>io.github.qbast</groupId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Azure blob storage wagon</name>
     <description>User Azure blob storage as a maven repository</description>
