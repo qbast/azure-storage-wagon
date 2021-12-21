@@ -47,13 +47,11 @@ public class AzureStorageRepository {
 
     private final String container;
     private final String accountName;
-    private final AuthenticationHandler authenticationHandler;
     private BlobContainerClient blobContainer;
 
     private static final Logger LOGGER = Logger.getLogger(AzureStorageRepository.class.getName());
 
     public AzureStorageRepository(String account, String directory) {
-        this.authenticationHandler = new AuthenticationHandler();
         this.container = directory;
         this.accountName = account;
     }
@@ -61,7 +59,7 @@ public class AzureStorageRepository {
     public void connect(AuthenticationInfo authenticationInfo) throws AuthenticationException {
 
         try {
-            BlobServiceClient cloudStorageAccount = authenticationHandler.create(accountName, authenticationInfo).buildClient();
+            BlobServiceClient cloudStorageAccount = AuthenticationHandler.get(accountName, authenticationInfo);
             blobContainer = cloudStorageAccount.getBlobContainerClient(container);
             blobContainer.exists();
         } catch (BlobStorageException e) {
@@ -70,7 +68,6 @@ public class AzureStorageRepository {
     }
 
     public void copy(String resourceName, File destination, TransferProgress transferProgress) throws ResourceDoesNotExistException {
-
         LOGGER.log(Level.FINER,String.format("Downloading key %s from container %s into %s", resourceName, container, destination.getAbsolutePath()));
 
         try {
