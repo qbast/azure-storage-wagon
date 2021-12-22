@@ -14,7 +14,7 @@ It can be done in pom.xml file like this:
         <extension>
             <groupId>io.github.qbast</groupId>
             <artifactId>azure-storage-wagon</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </extension>
     </extensions>
 </build>
@@ -28,7 +28,7 @@ Another way is to create `.mvn/extensions.xml` in the project directory with fol
        <extension>
            <groupId>io.github.qbast</groupId>
            <artifactId>azure-storage-wagon</artifactId>
-           <version>1.0.0</version>
+           <version>1.0.1</version>
         </extension>
     </extensions>
 
